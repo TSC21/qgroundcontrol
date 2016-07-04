@@ -1,25 +1,12 @@
-/*=====================================================================
- 
- QGroundControl Open Source Ground Control Station
- 
- (c) 2009 - 2014 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
- 
- This file is part of the QGROUNDCONTROL project
- 
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
- 
- ======================================================================*/
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
+
 
 #ifndef PARAMETERLOADER_H
 #define PARAMETERLOADER_H
@@ -103,6 +90,8 @@ public:
 
     /// If this file is newer than anything in the cache, cache it as the latest version
     static void cacheMetaDataFile(const QString& metaDataFile, MAV_AUTOPILOT firmwareType);
+
+    int defaultComponenentId(void) { return _defaultComponentId; }
     
 signals:
     /// Signalled when the full set of facts are ready
@@ -142,8 +131,6 @@ private:
     void _saveToEEPROM(void);
     void _checkInitialLoadComplete(bool failIfNoDefaultComponent);
 
-    LinkInterface* _dedicatedLink; ///< Parameter protocol stays on this link
-    
     /// First mapping is by component id
     /// Second mapping is parameter name, to Fact* in QVariant
     QMap<int, QVariantMap>            _mapParameterName2Variant;
@@ -164,8 +151,16 @@ private:
     int         _parameterSetMajorVersion;      ///< Version for parameter set, -1 if not known
     QObject*    _parameterMetaData;             ///< Opaque data from FirmwarePlugin::loadParameterMetaDataCall
 
-    static const int _maxInitialLoadRetry = 10;                 ///< Maximum retries for initial index based load
-    static const int _maxReadWriteRetry = 5;                    ///< Maximum retries read/write
+    // Wait counts from previous parameter update cycle
+    int         _prevWaitingReadParamIndexCount;
+    int         _prevWaitingReadParamNameCount;
+    int         _prevWaitingWriteParamNameCount;
+
+
+    static const int _maxInitialRequestListRetry = 4;       ///< Maximum retries for request list
+    int              _initialRequestRetryCount;             ///< Current retry count for request list
+    static const int _maxInitialLoadRetrySingleParam = 10;  ///< Maximum retries for initial index based load of a single param
+    static const int _maxReadWriteRetry = 5;                ///< Maximum retries read/write
 
     QMap<int, int>                  _paramCountMap;             ///< Key: Component id, Value: count of parameters in this component
     QMap<int, QMap<int, int> >      _waitingReadParamIndexMap;  ///< Key: Component id, Value: Map { Key: parameter index still waiting for, Value: retry count }

@@ -1,25 +1,12 @@
-/*=====================================================================
- 
- QGroundControl Open Source Ground Control Station
- 
- (c) 2009 - 2014 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
- 
- This file is part of the QGROUNDCONTROL project
- 
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
- 
- ======================================================================*/
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
+
 
 /// @file
 ///     @author Don Gagne <don@thegagnes.com>
@@ -57,6 +44,11 @@ MissionManager::~MissionManager()
 
 void MissionManager::writeMissionItems(const QList<MissionItem*>& missionItems)
 {
+    if (inProgress()) {
+        qCDebug(MissionManagerLog) << "writeMissionItems called while transaction in progress";
+        return;
+    }
+
     bool skipFirstItem = !_vehicle->firmwarePlugin()->sendHomePositionToVehicle();
 
     _missionItems.clear();
@@ -81,11 +73,6 @@ void MissionManager::writeMissionItems(const QList<MissionItem*>& missionItems)
 
     qCDebug(MissionManagerLog) << "writeMissionItems count:" << _missionItems.count();
     
-    if (inProgress()) {
-        qCDebug(MissionManagerLog) << "writeMissionItems called while transaction in progress";
-        return;
-    }
-
     // Prime write list
     for (int i=0; i<_missionItems.count(); i++) {
         _itemIndicesToWrite << i;
@@ -120,7 +107,7 @@ void MissionManager::writeArduPilotGuidedMissionItem(const QGeoCoordinate& gotoC
     mavlink_mission_item_t  missionItem;
 
     missionItem.target_system =     _vehicle->id();
-    missionItem.target_component =  0;
+    missionItem.target_component =  _vehicle->defaultComponentId();
     missionItem.seq =               0;
     missionItem.command =           MAV_CMD_NAV_WAYPOINT;
     missionItem.param1 =            0;
@@ -145,6 +132,11 @@ void MissionManager::writeArduPilotGuidedMissionItem(const QGeoCoordinate& gotoC
 void MissionManager::requestMissionItems(void)
 {
     qCDebug(MissionManagerLog) << "requestMissionItems read sequence";
+
+    if (inProgress()) {
+        qCDebug(MissionManagerLog) << "requestMissionItems called while transaction in progress";
+        return;
+    }
     
     mavlink_message_t               message;
     mavlink_mission_request_list_t  request;
@@ -197,8 +189,13 @@ bool MissionManager::_stopAckTimeout(AckType_t expectedAck)
     _ackTimeoutTimer->stop();
     
     if (savedRetryAck != expectedAck) {
-        _sendError(ProtocolOrderError, QString("Vehicle responded incorrectly to mission item protocol sequence: %1:%2").arg(_ackTypeToString(savedRetryAck)).arg(_ackTypeToString(expectedAck)));
-        _finishTransaction(false);
+        if (savedRetryAck == AckNone) {
+            // Don't annoy the user with warnings about unexpected mission commands, just ignore them; ArduPilot updates home position using
+            // spurious MISSION_ITEMs.
+        } else {
+            _sendError(ProtocolOrderError, QString("Vehicle responded incorrectly to mission item protocol sequence: %1:%2").arg(_ackTypeToString(savedRetryAck)).arg(_ackTypeToString(expectedAck)));
+            _finishTransaction(false);
+        }
         success = false;
     } else {
         success = true;

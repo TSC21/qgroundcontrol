@@ -1,25 +1,12 @@
-/*=====================================================================
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
- QGroundControl Open Source Ground Control Station
- 
- (c) 2009, 2015 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
- 
- This file is part of the QGROUNDCONTROL project
- 
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
- 
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
- 
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
- 
- ======================================================================*/
 
 /// @file
 ///     @brief PX4 Firmware Upgrade UI
@@ -33,6 +20,10 @@
 
 #include <QStandardPaths>
 #include <QRegularExpression>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QNetworkProxy>
 
 struct FirmwareToUrlElement_t {
     FirmwareUpgradeController::AutoPilotStackType_t    stackType;
@@ -75,6 +66,7 @@ FirmwareUpgradeController::FirmwareUpgradeController(void)
     connect(&_eraseTimer, &QTimer::timeout, this, &FirmwareUpgradeController::_eraseProgressTick);
 
     _initFirmwareHash();
+    _determinePX4StableVersion();
 }
 
 FirmwareUpgradeController::~FirmwareUpgradeController()
@@ -216,8 +208,32 @@ void FirmwareUpgradeController::_initFirmwareHash()
         { AutoPilotStackPX4, BetaFirmware,      DefaultVehicleFirmware, "http://px4-travis.s3.amazonaws.com/Firmware/beta/px4fmu-v4_default.px4"},
         { AutoPilotStackPX4, DeveloperFirmware, DefaultVehicleFirmware, "http://px4-travis.s3.amazonaws.com/Firmware/master/px4fmu-v4_default.px4"},
         { AutoPilotStackAPM, StableFirmware,    QuadFirmware,           "http://firmware.ardupilot.org/Copter/stable/PX4-quad/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    X8Firmware,             "http://firmware.ardupilot.org/Copter/stable/PX4-octa-quad/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    HexaFirmware,           "http://firmware.ardupilot.org/Copter/stable/PX4-hexa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    OctoFirmware,           "http://firmware.ardupilot.org/Copter/stable/PX4-octa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    YFirmware,              "http://firmware.ardupilot.org/Copter/stable/PX4-tri/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    Y6Firmware,             "http://firmware.ardupilot.org/Copter/stable/PX4-y6/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    HeliFirmware,           "http://firmware.ardupilot.org/Copter/stable/PX4-heli/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    PlaneFirmware,          "http://firmware.ardupilot.org/Plane/stable/PX4/ArduPlane-v4.px4"},
+        { AutoPilotStackAPM, StableFirmware,    RoverFirmware,          "http://firmware.ardupilot.org/Rover/stable/PX4/APMrover2-v4.px4"},
         { AutoPilotStackAPM, BetaFirmware,      QuadFirmware,           "http://firmware.ardupilot.org/Copter/beta/PX4-quad/ArduCopter-v4.px4"},
-        { AutoPilotStackAPM, DeveloperFirmware, QuadFirmware,           "http://firmware.ardupilot.org/Copter/latest/PX4-quad/ArduCopter-v4.px4"}
+        { AutoPilotStackAPM, BetaFirmware,      X8Firmware,             "http://firmware.ardupilot.org/Copter/beta/PX4-octa-quad/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      HexaFirmware,           "http://firmware.ardupilot.org/Copter/beta/PX4-hexa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      OctoFirmware,           "http://firmware.ardupilot.org/Copter/beta/PX4-octa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      YFirmware,              "http://firmware.ardupilot.org/Copter/beta/PX4-tri/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      Y6Firmware,             "http://firmware.ardupilot.org/Copter/beta/PX4-y6/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      HeliFirmware,           "http://firmware.ardupilot.org/Copter/beta/PX4-heli/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      PlaneFirmware,          "http://firmware.ardupilot.org/Plane/beta/PX4/ArduPlane-v4.px4"},
+        { AutoPilotStackAPM, BetaFirmware,      RoverFirmware,          "http://firmware.ardupilot.org/Rover/beta/PX4/APMrover2-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, QuadFirmware,           "http://firmware.ardupilot.org/Copter/latest/PX4-quad/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, X8Firmware,             "http://firmware.ardupilot.org/Copter/latest/PX4-octa-quad/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, HexaFirmware,           "http://firmware.ardupilot.org/Copter/latest/PX4-hexa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, OctoFirmware,           "http://firmware.ardupilot.org/Copter/latest/PX4-octa/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, YFirmware,              "http://firmware.ardupilot.org/Copter/latest/PX4-tri/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, Y6Firmware,             "http://firmware.ardupilot.org/Copter/latest/PX4-y6/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, HeliFirmware,           "http://firmware.ardupilot.org/Copter/latest/PX4-heli/ArduCopter-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, PlaneFirmware,          "http://firmware.ardupilot.org/Plane/latest/PX4/ArduPlane-v4.px4"},
+        { AutoPilotStackAPM, DeveloperFirmware, RoverFirmware,          "http://firmware.ardupilot.org/Rover/latest/PX4/APMrover2-v4.px4"}
     };
 
     //////////////////////////////////// PX4FMUV2 firmwares //////////////////////////////////////////////////
@@ -518,6 +534,10 @@ void FirmwareUpgradeController::_downloadFirmware(void)
     
     _downloadManager = new QNetworkAccessManager(this);
     Q_CHECK_PTR(_downloadManager);
+    QNetworkProxy tProxy;
+    tProxy.setType(QNetworkProxy::DefaultProxy);
+    _downloadManager->setProxy(tProxy);
+
     _downloadNetworkReply = _downloadManager->get(networkRequest);
     Q_ASSERT(_downloadNetworkReply);
     connect(_downloadNetworkReply, &QNetworkReply::downloadProgress, this, &FirmwareUpgradeController::_downloadProgress);
@@ -826,4 +846,70 @@ FirmwareUpgradeController::FirmwareVehicleType_t FirmwareUpgradeController::vehi
     }
 
     return _apmVehicleTypeFromCurrentVersionList[index];
+}
+
+void FirmwareUpgradeController::_determinePX4StableVersion(void)
+{
+    QGCFileDownload* downloader = new QGCFileDownload(this);
+    connect(downloader, &QGCFileDownload::downloadFinished, this, &FirmwareUpgradeController::_px4ReleasesGithubDownloadFinished);
+    connect(downloader, &QGCFileDownload::error, this, &FirmwareUpgradeController::_px4ReleasesGithubDownloadError);
+    downloader->download(QStringLiteral("https://api.github.com/repos/PX4/Firmware/releases"));
+}
+
+void FirmwareUpgradeController::_px4ReleasesGithubDownloadFinished(QString remoteFile, QString localFile)
+{
+    Q_UNUSED(remoteFile);
+
+    QFile jsonFile(localFile);
+    if (!jsonFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qCWarning(FirmwareUpgradeLog) << "Unable to open github px4 releases json file" << localFile << jsonFile.errorString();
+        return;
+    }
+    QByteArray bytes = jsonFile.readAll();
+    jsonFile.close();
+
+    QJsonParseError jsonParseError;
+    QJsonDocument doc = QJsonDocument::fromJson(bytes, &jsonParseError);
+    if (jsonParseError.error != QJsonParseError::NoError) {
+        qCWarning(FirmwareUpgradeLog) <<  "Unable to open px4 releases json document" << localFile << jsonParseError.errorString();
+        return;
+    }
+
+    // Json should be an array of release objects
+    if (!doc.isArray()) {
+        qCWarning(FirmwareUpgradeLog) <<  "px4 releases json document is not an array" << localFile;
+        return;
+    }
+    QJsonArray releases = doc.array();
+
+    // The first release marked prerelease=false is stable
+    // The first release marked prerelease=true is beta
+    bool foundStable = false;
+    bool foundBeta = false;
+    for (int i=0; i<releases.count() && (!foundStable || !foundBeta); i++) {
+        QJsonObject release = releases[i].toObject();
+        if (!foundStable && !release["prerelease"].toBool()) {
+            _px4StableVersion = release["name"].toString();
+            emit px4StableVersionChanged(_px4StableVersion);
+            qCDebug(FirmwareUpgradeLog()) << "Found px4 stable version" << _px4StableVersion;
+            foundStable = true;
+        } else if (!foundBeta && release["prerelease"].toBool()) {
+            _px4BetaVersion = release["name"].toString();
+            emit px4StableVersionChanged(_px4BetaVersion);
+            qCDebug(FirmwareUpgradeLog()) << "Found px4 beta version" << _px4BetaVersion;
+            foundBeta = true;
+        }
+    }
+
+    if (!foundStable) {
+        qCDebug(FirmwareUpgradeLog()) << "Unable to find px4 stable version" << localFile;
+    }
+    if (!foundBeta) {
+        qCDebug(FirmwareUpgradeLog()) << "Unable to find px4 beta version" << localFile;
+    }
+}
+
+void FirmwareUpgradeController::_px4ReleasesGithubDownloadError(QString errorMsg)
+{
+    qCWarning(FirmwareUpgradeLog) << "PX4 releases github download failed" << errorMsg;
 }

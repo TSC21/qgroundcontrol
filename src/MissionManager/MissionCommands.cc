@@ -1,24 +1,12 @@
-/*===================================================================
-QGroundControl Open Source Ground Control Station
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
-(c) 2009, 2010 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
-This file is part of the QGROUNDCONTROL project
-
-    QGROUNDCONTROL is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    QGROUNDCONTROL is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
-======================================================================*/
 
 #include "MissionCommands.h"
 #include "FactMetaData.h"
@@ -98,12 +86,7 @@ MAV_AUTOPILOT MissionCommands::_firmwareTypeFromVehicle(Vehicle* vehicle) const
     if (vehicle) {
         return vehicle->firmwareType();
     } else {
-        QSettings settings;
-
-        // FIXME: Hack duplicated code from QGroundControlQmlGlobal. Had to do this for now since
-        // QGroundControlQmlGlobal is not available from C++ side.
-
-        return (MAV_AUTOPILOT)settings.value("OfflineEditingFirmwareType", MAV_AUTOPILOT_ARDUPILOTMEGA).toInt();
+        return (MAV_AUTOPILOT)QGroundControlQmlGlobal::offlineEditingFirmwareType()->rawValue().toInt();
     }
 }
 

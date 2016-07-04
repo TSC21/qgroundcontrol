@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=QGroundControl
+GenericName=Ground Control Station
+Comment=UAS ground control station
+Icon=$/qgroundcontrol/resources/icons/qgroundcontrol.png
+Exec=$/build-qgroundcontrol-Desktop_Qt_5_5_1_GCC_64bit-Debug/debug/qgroundcontrol
+Terminal=false
+Categories=Utility;

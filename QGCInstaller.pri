@@ -4,17 +4,7 @@
 # Maintainer:
 # Lorenz Meier <lm@inf.ethz.ch>
 # (c) 2009-2014 QGroundControl Developers
-# This file is part of the open groundstation project
-# QGroundControl is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# QGroundControl is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with QGroundControl. If not, see <http://www.gnu.org/licenses/>.
+# License terms set in COPYING.md
 # -------------------------------------------------
 
 installer {
@@ -39,7 +29,7 @@ installer {
         QMAKE_POST_LINK += && mkdir -p $${DESTDIR}/package
         QMAKE_POST_LINK += && cd $${DESTDIR} && $$dirname(QMAKE_QMAKE)/macdeployqt qgroundcontrol.app -appstore-compliant -verbose=2 -qmldir=$${BASEDIR}/src
         QMAKE_POST_LINK += && cd $${OUT_PWD}
-        QMAKE_POST_LINK += && hdiutil create -layout SPUD -srcfolder $${DESTDIR}/qgroundcontrol.app -volname QGroundControl $${DESTDIR}/package/qgroundcontrol.dmg
+        QMAKE_POST_LINK += && hdiutil create -verbose -stretch 1g -layout SPUD -srcfolder $${DESTDIR}/qgroundcontrol.app -volname QGroundControl $${DESTDIR}/package/qgroundcontrol.dmg
     }
     WindowsBuild {
         # The pdb moving command are commented out for now since we are including the .pdb in the installer. This makes it much

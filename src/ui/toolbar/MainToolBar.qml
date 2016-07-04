@@ -1,25 +1,12 @@
-/*=====================================================================
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
-QGroundControl Open Source Ground Control Station
-
-(c) 2009, 2015 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
-This file is part of the QGROUNDCONTROL project
-
-    QGROUNDCONTROL is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    QGROUNDCONTROL is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
-======================================================================*/
 
 /**
  * @file
@@ -65,6 +52,10 @@ Rectangle {
 
     MainToolBarController { id: _controller }
 
+    function checkPreferencesButton() {
+        preferencesButton.checked = true
+    }
+
     function checkSetupButton() {
         setupButton.checked = true
     }
@@ -80,7 +71,7 @@ Rectangle {
     function getBatteryColor() {
         if(activeVehicle) {
             if(activeVehicle.battery.percentRemaining.value > 75) {
-                return colorGreen
+                return qgcPal.text
             }
             if(activeVehicle.battery.percentRemaining.value > 50) {
                 return colorOrange
@@ -321,51 +312,29 @@ Rectangle {
     }
 
     //---------------------------------------------
-    // Logo (Preferences Button)
-    Rectangle {
-        id:                     preferencesButton
-        width:                  mainWindow.tbButtonWidth * 1.25
-        height:                 parent.height
-        anchors.top:            parent.top
-        anchors.left:           parent.left
-        color:                  "#4A2C6D"
-        Image {
-            height:                 mainWindow.tbCellHeight
-            anchors.centerIn:       parent
-            source:                 "/res/QGCLogoWhite"
-            fillMode:               Image.PreserveAspectFit
-            smooth:                 true
-            mipmap:                 true
-            antialiasing:           true
-        }
-        /* Experimenting with a white/black divider
-        Rectangle {
-            color:      qgcPal.globalTheme === QGCPalette.Light ? Qt.rgba(0,0,0,0.15) : Qt.rgba(1,1,1,0.15)
-            height: parent.height
-            width:  1
-            anchors.right:  parent.right
-            anchors.top:    parent.top
-        }
-        */
-        MouseArea {
-            anchors.fill:   parent
-            onClicked:      toolBar.showPreferences()
-        }
-    }
-
-    //---------------------------------------------
     // Toolbar Row
     Row {
         id:                     viewRow
         height:                 mainWindow.tbCellHeight
         spacing:                mainWindow.tbSpacing
-        anchors.left:           preferencesButton.right
-        anchors.leftMargin:     mainWindow.tbSpacing
+        anchors.left:           parent.left
         anchors.bottomMargin:   1
         anchors.top:            parent.top
         anchors.bottom:         parent.bottom
 
         ExclusiveGroup { id: mainActionGroup }
+
+        QGCToolBarButton {
+            id:                 preferencesButton
+            width:              mainWindow.tbButtonWidth
+            anchors.top:        parent.top
+            anchors.bottom:     parent.bottom
+            exclusiveGroup:     mainActionGroup
+            source:             "/res/QGCLogoWhite"
+            logo:               true
+            text:               "Settings"
+            onClicked:          toolBar.showPreferences()
+        }
 
         QGCToolBarButton {
             id:                 setupButton
@@ -374,6 +343,7 @@ Rectangle {
             anchors.bottom:     parent.bottom
             exclusiveGroup:     mainActionGroup
             source:             "/qmlimages/Gears.svg"
+            text:               "Setup"
             onClicked:          toolBar.showSetupView()
         }
 
@@ -384,6 +354,7 @@ Rectangle {
             anchors.bottom:     parent.bottom
             exclusiveGroup:     mainActionGroup
             source:             "/qmlimages/Plan.svg"
+            text:               "Plan"
             onClicked:          toolBar.showPlanView()
         }
 
@@ -394,6 +365,7 @@ Rectangle {
             anchors.bottom:     parent.bottom
             exclusiveGroup:     mainActionGroup
             source:             "/qmlimages/PaperPlane.svg"
+            text:               "Fly"
             onClicked:          toolBar.showFlyView()
         }
     }

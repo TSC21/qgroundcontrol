@@ -1,25 +1,12 @@
-/*=====================================================================
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
- QGroundControl Open Source Ground Control Station
-
- (c) 2009 - 2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
- This file is part of the QGROUNDCONTROL project
-
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
- ======================================================================*/
 
 /// @file
 ///     @author Gus Grubba <mavlink@grubba.com>
@@ -87,20 +74,14 @@ QGCMapEngineManager::updateForCurrentView(double lon0, double lat0, double lon1,
         QGCTileSet set = QGCMapEngine::getTileCount(z, lon0, lat0, lon1, lat1, mapType);
         _totalSet += set;
     }
-    //-- Beyond 100,000,000 tiles is just nuts
-    if(_totalSet.tileCount > 100 * 1000 * 1000) {
-        _crazySize = true;
-        emit crazySizeChanged();
-    } else {
-        _crazySize = false;
-        emit crazySizeChanged();
-        emit tileX0Changed();
-        emit tileX1Changed();
-        emit tileY0Changed();
-        emit tileY1Changed();
-        emit tileCountChanged();
-        emit tileSizeChanged();
-    }
+    emit tileX0Changed();
+    emit tileX1Changed();
+    emit tileY0Changed();
+    emit tileY1Changed();
+    emit tileCountChanged();
+    emit tileSizeChanged();
+
+    qCDebug(QGCMapEngineManagerLog) << "updateForCurrentView" << lat0 << lon0 << lat1 << lon1 << minZoom << maxZoom;
 }
 
 //-----------------------------------------------------------------------------

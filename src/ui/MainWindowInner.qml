@@ -1,25 +1,12 @@
-/*=====================================================================
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
-QGroundControl Open Source Ground Control Station
-
-(c) 2009, 2015 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
-This file is part of the QGROUNDCONTROL project
-
-QGROUNDCONTROL is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-QGROUNDCONTROL is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
-======================================================================*/
 
 import QtQuick          2.5
 import QtQuick.Controls 1.2
@@ -120,6 +107,7 @@ Item {
         setupViewLoader.visible     = false
         planViewLoader.visible      = false
         preferencesPanel.visible    = true
+        toolBar.checkPreferencesButton()
     }
 
     // The following are use for unit testing only
@@ -280,7 +268,6 @@ Item {
         z:                  QGroundControl.zOrderTopMost + 100
         active:             visible
         onVisibleChanged: {
-            console.log("Visible: " + visible)
             if(!visible) {
                 source = ""
             }
@@ -440,7 +427,19 @@ Item {
     //-------------------------------------------------------------------------
     //-- Critical Message Area
     Rectangle {
-        id: criticalMmessageArea
+        id:                         criticalMmessageArea
+        width:                      mainWindow.width  * 0.55
+        height:                     Math.min(criticalMessageText.height + _textMargins * 2, ScreenTools.defaultFontPixelHeight * 6)
+        color:                      "#eecc44"
+        visible:                    false
+        radius:                     ScreenTools.defaultFontPixelHeight * 0.5
+        anchors.horizontalCenter:   parent.horizontalCenter
+        anchors.top:                parent.top
+        anchors.topMargin:          tbHeight + ScreenTools.defaultFontPixelHeight / 2
+        border.color:               "#808080"
+        border.width:               2
+
+        readonly property real _textMargins: ScreenTools.defaultFontPixelHeight
 
         function close() {
             //-- Are there messages in the waiting queue?
@@ -459,17 +458,6 @@ Item {
             }
         }
 
-        width:              mainWindow.width  * 0.55
-        height:             ScreenTools.defaultFontPixelHeight * 6
-        color:              "#eecc44"
-        visible:            false
-        radius:             ScreenTools.defaultFontPixelHeight * 0.5
-        anchors.horizontalCenter:   parent.horizontalCenter
-        anchors.bottom:             parent.bottom
-        anchors.bottomMargin:       ScreenTools.defaultFontPixelHeight
-        border.color:       "#808080"
-        border.width:       2
-
         MouseArea {
             // This MouseArea prevents the Map below it from getting Mouse events. Without this
             // things like mousewheel will scroll the Flickable and then scroll the map as well.
@@ -480,7 +468,7 @@ Item {
 
         Flickable {
             id:                 criticalMessageFlick
-            anchors.margins:    ScreenTools.defaultFontPixelHeight
+            anchors.margins:    parent._textMargins
             anchors.fill:       parent
             contentHeight:      criticalMessageText.height
             contentWidth:       criticalMessageText.width

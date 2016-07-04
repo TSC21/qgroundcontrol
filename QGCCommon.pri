@@ -4,17 +4,7 @@
 # Maintainer:
 # Lorenz Meier <lm@inf.ethz.ch>
 # (c) 2009-2014 QGroundControl Developers
-# This file is part of the open groundstation project
-# QGroundControl is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
-# QGroundControl is distributed in the hope that it will be useful,
-# but WITHOUT ANY WARRANTY; without even the implied warranty of
-# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-# GNU General Public License for more details.
-# You should have received a copy of the GNU General Public License
-# along with QGroundControl. If not, see <http://www.gnu.org/licenses/>.
+# License terms set in COPYING.md
 # -------------------------------------------------
 
 #
@@ -31,10 +21,10 @@ linux {
         message("Linux build")
         CONFIG += LinuxBuild
         DEFINES += __STDC_LIMIT_MACROS
-		linux-clang {
-			message("Linux clang")
-			QMAKE_CXXFLAGS += -Qunused-arguments -fcolor-diagnostics
-		}
+        linux-clang {
+            message("Linux clang")
+            QMAKE_CXXFLAGS += -Qunused-arguments -fcolor-diagnostics
+        }
     } else : linux-rasp-pi2-g++ {
         message("Linux R-Pi2 build")
         CONFIG += LinuxBuild
@@ -86,6 +76,20 @@ equals(QT_MAJOR_VERSION, 5) | greaterThan(QT_MINOR_VERSION, 5) {
     QMAKE_LFLAGS += -Wl,-no_pie
 } else {
     error("Unsupported build platform, only Linux, Windows, Android and Mac (Mac OS and iOS) are supported")
+}
+
+# Enable ccache where we can
+linux|macx|ios {
+    system(which ccache) {
+        message("Found ccache, enabling")
+        !ios {
+            QMAKE_CXX = ccache $$QMAKE_CXX
+            QMAKE_CC  = ccache $$QMAKE_CC
+        } else {
+            QMAKE_CXX = $$PWD/tools/iosccachecc.sh
+            QMAKE_CC  = $$PWD/tools/iosccachecxx.sh
+        }
+    }
 }
 
 MobileBuild {

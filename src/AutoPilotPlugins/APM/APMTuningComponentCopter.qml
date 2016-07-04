@@ -1,25 +1,12 @@
-/*=====================================================================
+/****************************************************************************
+ *
+ *   (c) 2009-2016 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
+ *
+ * QGroundControl is licensed according to the terms in the file
+ * COPYING.md in the root of the source code directory.
+ *
+ ****************************************************************************/
 
- QGroundControl Open Source Ground Control Station
-
- (c) 2009 - 2015 QGROUNDCONTROL PROJECT <http://www.qgroundcontrol.org>
-
- This file is part of the QGROUNDCONTROL project
-
- QGROUNDCONTROL is free software: you can redistribute it and/or modify
- it under the terms of the GNU General Public License as published by
- the Free Software Foundation, either version 3 of the License, or
- (at your option) any later version.
-
- QGROUNDCONTROL is distributed in the hope that it will be useful,
- but WITHOUT ANY WARRANTY; without even the implied warranty of
- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- GNU General Public License for more details.
-
- You should have received a copy of the GNU General Public License
- along with QGROUNDCONTROL. If not, see <http://www.gnu.org/licenses/>.
-
- ======================================================================*/
 
 import QtQuick              2.5
 import QtQuick.Controls     1.4
@@ -39,14 +26,20 @@ QGCView {
 
     QGCPalette { id: palette; colorGroupEnabled: enabled }
 
-    property Fact _throttleMid: controller.getParameterFact(-1, "THR_MID")
-    property Fact _rcFeel:      controller.getParameterFact(-1, "RC_FEEL_RP")
-    property Fact _rateRollP:   controller.getParameterFact(-1, "r.ATC_RAT_RLL_P")
-    property Fact _rateRollI:   controller.getParameterFact(-1, "r.ATC_RAT_RLL_I")
-    property Fact _ratePitchP:  controller.getParameterFact(-1, "r.ATC_RAT_PIT_P")
-    property Fact _ratePitchI:  controller.getParameterFact(-1, "r.ATC_RAT_PIT_I")
-    property Fact _rateClimbP:  controller.getParameterFact(-1, "ACCEL_Z_P")
-    property Fact _rateClimbI:  controller.getParameterFact(-1, "ACCEL_Z_I")
+    // Older firmwares use THR_MODE, newer use MOT_THST_HOVER
+    property bool _throttleMidExists: controller.parameterExists(-1, "THR_MID")
+    property Fact _hoverTuneParam:  controller.getParameterFact(-1, _throttleMidExists ? "THR_MID" : "MOT_THST_HOVER")
+    property real _hoverTuneMin:    _throttleMidExists ? 200 : 0
+    property real _hoverTuneMax:    _throttleMidExists ? 800 : 1
+    property real _hoverTuneStep:   _throttleMidExists ? 10 : 0.01
+
+    property Fact _rcFeel:          controller.getParameterFact(-1, "RC_FEEL_RP")
+    property Fact _rateRollP:       controller.getParameterFact(-1, "r.ATC_RAT_RLL_P")
+    property Fact _rateRollI:       controller.getParameterFact(-1, "r.ATC_RAT_RLL_I")
+    property Fact _ratePitchP:      controller.getParameterFact(-1, "r.ATC_RAT_PIT_P")
+    property Fact _ratePitchI:      controller.getParameterFact(-1, "r.ATC_RAT_PIT_I")
+    property Fact _rateClimbP:      controller.getParameterFact(-1, "ACCEL_Z_P")
+    property Fact _rateClimbI:      controller.getParameterFact(-1, "ACCEL_Z_I")
 
     property Fact _ch7Opt:  controller.getParameterFact(-1, "CH7_OPT")
     property Fact _ch8Opt:  controller.getParameterFact(-1, "CH8_OPT")
@@ -76,7 +69,7 @@ QGCView {
         // handler which updates your property with the new value, this first value change will trash
         // your bound values. In order to work around this we don't set the values into the Sliders until
         // after Qml load is done. We also don't track value changes until Qml load completes.
-        throttleHover.value = _throttleMid.value
+        throttleHover.value = _hoverTuneParam.value
         rollPitch.value = _rateRollP.value
         climb.value = _rateClimbP.value
         rcFeel.value = _rcFeel.value
@@ -172,14 +165,14 @@ QGCView {
                             id:                 throttleHover
                             anchors.left:       parent.left
                             anchors.right:      parent.right
-                            minimumValue:       200
-                            maximumValue:       800
-                            stepSize:           10.0
+                            minimumValue:       _hoverTuneMin
+                            maximumValue:       _hoverTuneMax
+                            stepSize:           _hoverTuneStep
                             tickmarksEnabled:   true
 
                             onValueChanged: {
                                 if (_loadComplete) {
-                                    _throttleMid.value = value
+                                    _hoverTuneParam.value = value
                                 }
                             }
                         }
