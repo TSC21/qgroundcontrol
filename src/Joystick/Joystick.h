@@ -337,6 +337,7 @@ private:
     static const char* _buttonActionArm;
     static const char* _buttonActionDisarm;
     static const char* _buttonActionToggleArm;
+    static const char* _buttonActionEmergencyStop;
     static const char* _buttonActionVTOLFixedWing;
     static const char* _buttonActionVTOLMultiRotor;
     static const char* _buttonActionStepZoomIn;

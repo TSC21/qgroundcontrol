@@ -44,6 +44,7 @@ const char* Joystick::_gimbalSettingsKey =              "GimbalEnabled";
 const char* Joystick::_buttonActionNone =               QT_TR_NOOP("No Action");
 const char* Joystick::_buttonActionArm =                QT_TR_NOOP("Arm");
 const char* Joystick::_buttonActionDisarm =             QT_TR_NOOP("Disarm");
+const char* Joystick::_buttonActionEmergencyStop =      QT_TR_NOOP("Emergency stop");
 const char* Joystick::_buttonActionToggleArm =          QT_TR_NOOP("Toggle Arm");
 const char* Joystick::_buttonActionVTOLFixedWing =      QT_TR_NOOP("VTOL: Fixed Wing");
 const char* Joystick::_buttonActionVTOLMultiRotor =     QT_TR_NOOP("VTOL: Multi-Rotor");
@@ -989,6 +990,8 @@ void Joystick::_executeButtonAction(const QString& action, bool buttonDown)
         if (buttonDown) emit setArmed(false);
     } else if (action == _buttonActionToggleArm) {
         if (buttonDown) emit setArmed(!_activeVehicle->armed());
+    } else if (action == _buttonActionEmergencyStop) {
+        if (buttonDown) emit _activeVehicle->emergencyStop();
     } else if (action == _buttonActionVTOLFixedWing) {
         if (buttonDown) emit setVtolInFwdFlight(true);
     } else if (action == _buttonActionVTOLMultiRotor) {
@@ -1112,6 +1115,7 @@ void Joystick::_buildActionList(Vehicle* activeVehicle)
     _assignableButtonActions.append(new AssignableButtonAction(this, _buttonActionArm));
     _assignableButtonActions.append(new AssignableButtonAction(this, _buttonActionDisarm));
     _assignableButtonActions.append(new AssignableButtonAction(this, _buttonActionToggleArm));
+    _assignableButtonActions.append(new AssignableButtonAction(this, _buttonActionEmergencyStop));
     if (activeVehicle) {
         QStringList list = activeVehicle->joystickFlightModes();
         foreach(auto mode, list) {
