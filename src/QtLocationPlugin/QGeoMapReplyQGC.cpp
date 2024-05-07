@@ -66,6 +66,9 @@ QGeoTiledMapReplyQGC::QGeoTiledMapReplyQGC(QNetworkAccessManager *networkManager
     , _request(request)
     , _networkManager(networkManager)
 {
+    // Setup network status listeners at the beginning
+    QGCDeviceInfo::setupNetworkListeners();
+
     if (_bingNoTileImage.length() == 0) {
         QFile file(":/res/BingNoTileBytes.dat");
         file.open(QFile::ReadOnly);

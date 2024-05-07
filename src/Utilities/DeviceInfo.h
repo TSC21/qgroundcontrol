@@ -3,4 +3,5 @@
 namespace QGCDeviceInfo {
 	bool isInternetAvailable();
 	bool isBluetoothAvailable();
+    void setupNetworkListeners();
 }
